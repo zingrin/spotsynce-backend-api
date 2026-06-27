@@ -1,0 +1,456 @@
+basePath: /
+definitions:
+  dto.CreateReservationRequest:
+    properties:
+      end_time:
+        type: string
+      parking_zone_id:
+        type: integer
+      start_time:
+        type: string
+      vehicle_number:
+        maxLength: 20
+        minLength: 2
+        type: string
+    required:
+    - end_time
+    - parking_zone_id
+    - start_time
+    - vehicle_number
+    type: object
+  dto.CreateZoneRequest:
+    properties:
+      capacity:
+        type: integer
+      description:
+        maxLength: 500
+        type: string
+      hourly_rate:
+        minimum: 0
+        type: number
+      location:
+        maxLength: 255
+        minLength: 2
+        type: string
+      name:
+        maxLength: 150
+        minLength: 2
+        type: string
+    required:
+    - capacity
+    - hourly_rate
+    - location
+    - name
+    type: object
+  dto.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.RegisterRequest:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      password:
+        maxLength: 72
+        minLength: 6
+        type: string
+      role:
+        enum:
+        - driver
+        - admin
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  spotsync_pkg_response.ErrorResponse:
+    properties:
+      errors: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  spotsync_pkg_response.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@spotsync.io
+    name: SpotSync Support
+  description: SpotSync is a production-ready parking reservation REST API built with
+    Go, Echo, and PostgreSQL.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: SpotSync API
+  version: "1.0"
+paths:
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate with email and password to receive a JWT token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+      summary: Login user
+      tags:
+      - Authentication
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account and receive a JWT token
+      parameters:
+      - description: Registration details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - Authentication
+  /api/v1/reservations:
+    get:
+      description: Retrieve all reservations with filtering (admin only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by status (active, cancelled, completed)
+        in: query
+        name: status
+        type: string
+      - description: Filter by parking zone ID
+        in: query
+        name: parking_zone_id
+        type: integer
+      - description: Filter by user ID
+        in: query
+        name: user_id
+        type: integer
+      - description: Sort field (start_time, end_time, total_cost, status, created_at)
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort direction (ASC, DESC)
+        in: query
+        name: sort_dir
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.SuccessResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List all reservations
+      tags:
+      - Reservations
+    post:
+      consumes:
+      - application/json
+      description: Book a parking spot in a zone (uses row locking to prevent overbooking)
+      parameters:
+      - description: Reservation details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateReservationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a reservation
+      tags:
+      - Reservations
+  /api/v1/reservations/{id}:
+    delete:
+      description: Cancel and soft-delete a reservation owned by the authenticated
+        user
+      parameters:
+      - description: Reservation ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel a reservation
+      tags:
+      - Reservations
+  /api/v1/reservations/my-reservations:
+    get:
+      description: Retrieve paginated reservations for the authenticated user
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.SuccessResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get my reservations
+      tags:
+      - Reservations
+  /api/v1/zones:
+    get:
+      description: Get paginated list of parking zones with search, filtering, and
+        sorting
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search by name, location, or description
+        in: query
+        name: search
+        type: string
+      - description: Filter by location
+        in: query
+        name: location
+        type: string
+      - description: Filter by active status
+        in: query
+        name: is_active
+        type: boolean
+      - default: created_at
+        description: Sort field (name, location, capacity, hourly_rate, created_at)
+        in: query
+        name: sort_by
+        type: string
+      - default: DESC
+        description: Sort direction (ASC, DESC)
+        in: query
+        name: sort_dir
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.SuccessResponse'
+      summary: List parking zones
+      tags:
+      - Parking Zones
+    post:
+      consumes:
+      - application/json
+      description: Create a new parking zone (admin only)
+      parameters:
+      - description: Parking zone details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateZoneRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a parking zone
+      tags:
+      - Parking Zones
+  /api/v1/zones/{id}:
+    get:
+      description: Retrieve a single parking zone by its ID
+      parameters:
+      - description: Parking zone ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.SuccessResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+      summary: Get parking zone by ID
+      tags:
+      - Parking Zones
+  /health:
+    get:
+      description: Check API and database connectivity status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.SuccessResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/spotsync_pkg_response.ErrorResponse'
+      summary: Health check
+      tags:
+      - Health
+schemes:
+- http
+- https
+securityDefinitions:
+  BearerAuth:
+    description: Enter the token with the `Bearer ` prefix, e.g. "Bearer abcde12345"
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
