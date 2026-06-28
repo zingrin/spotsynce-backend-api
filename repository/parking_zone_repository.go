@@ -37,7 +37,7 @@ func (r *ParkingZoneRepository) Create(ctx context.Context, zone *models.Parking
 	return r.db.WithContext(ctx).Create(zone).Error
 }
 
-// FindByID retrieves a parking zone by primary key.
+// FindByID retrieves a parking zone by primary key
 func (r *ParkingZoneRepository) FindByID(ctx context.Context, id uint) (*models.ParkingZone, error) {
 	var zone models.ParkingZone
 	err := r.db.WithContext(ctx).First(&zone, id).Error
