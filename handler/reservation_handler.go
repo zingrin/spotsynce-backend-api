@@ -64,15 +64,17 @@ func (h *ReservationHandler) Create(c echo.Context) error {
 // @Security BearerAuth
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
+// @Param status query string false "Filter by status (active, cancelled, completed)"
+// @Param sort_by query string false "Sort field (start_time, end_time, total_cost, status, created_at)"
+// @Param sort_dir query string false "Sort direction (ASC, DESC)"
 // @Success 200 {object} response.SuccessResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Router /api/v1/reservations/my-reservations [get]
 func (h *ReservationHandler) GetMyReservations(c echo.Context) error {
 	userID := middleware.GetUserID(c)
-	page := parseIntQuery(c, "page", 1)
-	limit := parseIntQuery(c, "limit", 10)
+	query := bindMyReservationListQuery(c)
 
-	result, err := h.reservationService.GetMyReservations(c.Request().Context(), userID, page, limit)
+	result, err := h.reservationService.GetMyReservations(c.Request().Context(), userID, query)
 	if err != nil {
 		return err
 	}
@@ -134,6 +136,16 @@ func (h *ReservationHandler) ListAll(c echo.Context) error {
 	}
 
 	return response.OK(c, "reservations retrieved successfully", result)
+}
+
+func bindMyReservationListQuery(c echo.Context) *dto.ReservationListQuery {
+	return &dto.ReservationListQuery{
+		Page:    parseIntQuery(c, "page", 1),
+		Limit:   parseIntQuery(c, "limit", 10),
+		Status:  c.QueryParam("status"),
+		SortBy:  c.QueryParam("sort_by"),
+		SortDir: c.QueryParam("sort_dir"),
+	}
 }
 
 func bindReservationListQuery(c echo.Context) *dto.ReservationListQuery {

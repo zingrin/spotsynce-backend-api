@@ -89,18 +89,6 @@ func (r *ReservationRepository) FindByID(ctx context.Context, id uint, preload b
 	return &reservation, nil
 }
 
-// FindByUserID retrieves reservations for a specific user with pagination.
-func (r *ReservationRepository) FindByUserID(ctx context.Context, userID uint, page, limit int) ([]models.Reservation, int64, error) {
-	filter := ReservationFilter{
-		UserID: userID,
-		Page:   page,
-		Limit:  limit,
-		SortBy: "created_at",
-		SortDir: "DESC",
-	}
-	return r.List(ctx, filter, true)
-}
-
 // List retrieves reservations with filtering, sorting, and pagination.
 func (r *ReservationRepository) List(ctx context.Context, filter ReservationFilter, preload bool) ([]models.Reservation, int64, error) {
 	query := r.db.WithContext(ctx).Model(&models.Reservation{})

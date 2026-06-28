@@ -78,13 +78,22 @@ func (s *ReservationService) Create(ctx context.Context, userID uint, req *dto.C
 }
 
 // GetMyReservations returns paginated reservations for the authenticated user.
-func (s *ReservationService) GetMyReservations(ctx context.Context, userID uint, page, limit int) (*dto.PaginatedResponse, error) {
-	reservations, total, err := s.reservationRepo.FindByUserID(ctx, userID, page, limit)
+func (s *ReservationService) GetMyReservations(ctx context.Context, userID uint, query *dto.ReservationListQuery) (*dto.PaginatedResponse, error) {
+	filter := repository.ReservationFilter{
+		UserID:  userID,
+		Status:  query.Status,
+		SortBy:  query.SortBy,
+		SortDir: query.SortDir,
+		Page:    query.Page,
+		Limit:   query.Limit,
+	}
+
+	reservations, total, err := s.reservationRepo.List(ctx, filter, true)
 	if err != nil {
 		return nil, apperrors.NewWithDetails(500, "failed to retrieve reservations", nil)
 	}
 
-	pagination := dto.NormalizePagination(page, limit)
+	pagination := dto.NormalizePagination(query.Page, query.Limit)
 	return &dto.PaginatedResponse{
 		Items:      dto.ToReservationResponses(reservations),
 		Total:      total,

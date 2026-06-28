@@ -34,10 +34,8 @@ func (s *AuthService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 		return nil, apperrors.ErrEmailAlreadyExists
 	}
 
+	// Public registration always creates driver accounts; admin roles must be assigned directly in the database.
 	role := models.RoleDriver
-	if req.Role != "" {
-		role = req.Role
-	}
 
 	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
