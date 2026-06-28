@@ -38,7 +38,7 @@ func Created(c echo.Context, message string, data interface{}) error {
 	})
 }
 
-// NoContent sends a 204 response with a success wrapper.
+// NoContent sends a 204 response with a success wrapper
 func NoContent(c echo.Context, message string) error {
 	return c.JSON(http.StatusOK, SuccessResponse{
 		Success: true,
@@ -46,7 +46,7 @@ func NoContent(c echo.Context, message string) error {
 	})
 }
 
-// Error sends an error response with the given status code.
+// Error sends an error response with the given status code
 func Error(c echo.Context, statusCode int, message string, errors interface{}) error {
 	return c.JSON(statusCode, ErrorResponse{
 		Success: false,
