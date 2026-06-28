@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// AppError represents a domain-level error with an HTTP status code.
+// AppError represents a domain-level error with an HTTP status code
 type AppError struct {
 	Code    int
 	Message string
