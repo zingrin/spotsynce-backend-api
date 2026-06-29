@@ -45,7 +45,7 @@ func JWTMiddleware(jwtManager *utils.JWTManager) echo.MiddlewareFunc {
 	}
 }
 
-// AdminMiddleware restricts access to admin users only.
+// AdminMiddleware restricts access to admin users only
 func AdminMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -58,7 +58,7 @@ func AdminMiddleware() echo.MiddlewareFunc {
 	}
 }
 
-// GetUserID extracts the authenticated user ID from the Echo context.
+// GetUserID extracts the authenticated user ID from the Echo context
 func GetUserID(c echo.Context) uint {
 	userID, ok := c.Get(ContextUserIDKey).(uint)
 	if !ok {
@@ -67,7 +67,7 @@ func GetUserID(c echo.Context) uint {
 	return userID
 }
 
-// GetUserRole extracts the authenticated user role from the Echo context.
+// GetUserRole extracts the authenticated user role from the Echo context
 func GetUserRole(c echo.Context) string {
 	role, ok := c.Get(ContextUserRole).(string)
 	if !ok {
@@ -76,7 +76,7 @@ func GetUserRole(c echo.Context) string {
 	return role
 }
 
-// CORS returns a middleware that handles Cross-Origin Resource Sharing headers.
+// CORS returns a middleware that handles Cross-Origin Resource Sharing headers
 func CORS() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
