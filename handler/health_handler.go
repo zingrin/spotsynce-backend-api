@@ -9,17 +9,17 @@ import (
 	"gorm.io/gorm"
 )
 
-// HealthHandler handles health check requests.
+// HealthHandler handles health check request
 type HealthHandler struct {
 	db *gorm.DB
 }
 
-// NewHealthHandler creates a new HealthHandler.
+// NewHealthHandler creates a new HealthHandler
 func NewHealthHandler(db *gorm.DB) *HealthHandler {
 	return &HealthHandler{db: db}
 }
 
-// HealthResponse holds health check result data.
+// HealthResponse holds health check result data
 type HealthResponse struct {
 	Status   string `json:"status"`
 	Database string `json:"database"`
