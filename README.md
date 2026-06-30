@@ -121,14 +121,3 @@ go run cmd/main.go
 ## 👤 Author
 
 **zingrin**
-
-> Software Engineer
-
-- TypeScript
-- Express.js
-- PostgreSQL
-- Docker
-- GO
-- Echo
-
----
